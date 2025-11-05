@@ -4,3 +4,33 @@
 <PageTitle>Gestion de Documentos</PageTitle>
 
 <h3>Sistema de Documentos de Venta</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Crear Documento Nuevo</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Fecha de Emision</label>
+                    <input type="date" class="form-control" @bind="documentoActual.FechaEmision" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Receptor</label>
+                    <input type="text" class="form-control" @bind="documentoActual.NombreReceptor" placeholder="Ingrese el nombre completo" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DocumentoVenta documentoActual = new DocumentoVenta();
+
+    protected override void OnInitialized()
+    {
+        documentoActual.FechaEmision = DateTime.Now;
+    }
+}
