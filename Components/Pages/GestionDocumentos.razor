@@ -44,18 +44,69 @@
                 }
 
                 <button class="btn btn-secondary btn-sm mb-3" @onclick="AgregarLinea">+ Agregar Linea</button>
+
+                <div class="alert alert-info">
+                    <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
+                </div>
+
+                <button class="btn btn-primary w-100" @onclick="RegistrarDocumento">Registrar Documento</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Documentos Emitidos</h5>
+            </div>
+            <div class="card-body">
+                @if (listaDocumentos.Count == 0)
+                {
+                    <p class="text-muted">No se han emitido documentos</p>
+                }
+                else
+                {
+                    @foreach (var documento in listaDocumentos)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6>Documento #@documento.NumeroDocumento</h6>
+                                <p class="mb-1"><strong>Fecha de Emision:</strong> @documento.FechaEmision.ToString("dd/MM/yyyy")</p>
+                                <p class="mb-1"><strong>Receptor:</strong> @documento.NombreReceptor</p>
+                                <p class="mb-2"><strong>Lineas de Detalle:</strong></p>
+                                <ul class="small">
+                                    @foreach (var linea in documento.LineasDetalle)
+                                    {
+                                        <li>@linea.NombreProducto - $@linea.PrecioUnitario x @linea.CantidadProducto = $@linea.ImporteLinea.ToString("N2")</li>
+                                    }
+                                </ul>
+                                <h5 class="text-end">Importe Total: $@documento.ImporteTotal.ToString("N2")</h5>
+                            </div>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
 </div>
 
 @code {
+    private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
     private DocumentoVenta documentoActual = new DocumentoVenta();
+    private int secuenciaDocumento = 1;
 
     protected override void OnInitialized()
     {
-        documentoActual.FechaEmision = DateTime.Now;
-        documentoActual.LineasDetalle.Add(new ProductoLinea());
+        PrepararNuevoDocumento();
+    }
+
+    private void PrepararNuevoDocumento()
+    {
+        documentoActual = new DocumentoVenta
+        {
+            FechaEmision = DateTime.Now,
+            LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
+        };
     }
 
     private void AgregarLinea()
@@ -70,59 +121,21 @@
             documentoActual.LineasDetalle.Remove(linea);
         }
     }
-}
-```
 
-**COMMIT 7:**
-```bash
-git add Paginas/GestionDocumentos.razor
-git commit -m "agregar gestion de lineas de productos"
-```
-
----
-
-## PASO 10: AGREGAR CALCULO DE TOTAL
-
-Modificar `GestionDocumentos.razor` para mostrar el total:
-
-Agregar despues del boton "Agregar Linea":
-
-```razor
-<div class="alert alert-info">
-    <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
-</div>
-
-<button class="btn btn-primary w-100" @onclick="RegistrarDocumento">Registrar Documento</button>
-```
-
-Agregar en el @code:
-
-```csharp
-private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
-private int secuenciaDocumento = 1;
-
-private void RegistrarDocumento()
-{
-    if (string.IsNullOrWhiteSpace(documentoActual.NombreReceptor))
+    private void RegistrarDocumento()
     {
-        return;
+        if (string.IsNullOrWhiteSpace(documentoActual.NombreReceptor))
+        {
+            return;
+        }
+
+        if (documentoActual.LineasDetalle.Any(l => string.IsNullOrWhiteSpace(l.NombreProducto)))
+        {
+            return;
+        }
+
+        documentoActual.NumeroDocumento = secuenciaDocumento++;
+        listaDocumentos.Add(documentoActual);
+        PrepararNuevoDocumento();
     }
-
-    if (documentoActual.LineasDetalle.Any(l => string.IsNullOrWhiteSpace(l.NombreProducto)))
-    {
-        return;
-    }
-
-    documentoActual.NumeroDocumento = secuenciaDocumento++;
-    listaDocumentos.Add(documentoActual);
-    PrepararNuevoDocumento();
-}
-
-private void PrepararNuevoDocumento()
-{
-    documentoActual = new DocumentoVenta
-    {
-        FechaEmision = DateTime.Now,
-        LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
-    };
 }
