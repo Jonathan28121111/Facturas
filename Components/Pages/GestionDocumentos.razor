@@ -21,6 +21,29 @@
                     <label class="form-label">Nombre del Receptor</label>
                     <input type="text" class="form-control" @bind="documentoActual.NombreReceptor" placeholder="Ingrese el nombre completo" />
                 </div>
+
+                <h6>Lineas de Productos</h6>
+                @foreach (var linea in documentoActual.LineasDetalle)
+                {
+                    <div class="border p-2 mb-2">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control form-control-sm" placeholder="Producto" @bind="linea.NombreProducto" />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control form-control-sm" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control form-control-sm" placeholder="Cant" @bind="linea.CantidadProducto" />
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-danger btn-sm w-100" @onclick="() => QuitarLinea(linea)">X</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <button class="btn btn-secondary btn-sm mb-3" @onclick="AgregarLinea">+ Agregar Linea</button>
             </div>
         </div>
     </div>
@@ -32,5 +55,74 @@
     protected override void OnInitialized()
     {
         documentoActual.FechaEmision = DateTime.Now;
+        documentoActual.LineasDetalle.Add(new ProductoLinea());
     }
+
+    private void AgregarLinea()
+    {
+        documentoActual.LineasDetalle.Add(new ProductoLinea());
+    }
+
+    private void QuitarLinea(ProductoLinea linea)
+    {
+        if (documentoActual.LineasDetalle.Count > 1)
+        {
+            documentoActual.LineasDetalle.Remove(linea);
+        }
+    }
+}
+```
+
+**COMMIT 7:**
+```bash
+git add Paginas/GestionDocumentos.razor
+git commit -m "agregar gestion de lineas de productos"
+```
+
+---
+
+## PASO 10: AGREGAR CALCULO DE TOTAL
+
+Modificar `GestionDocumentos.razor` para mostrar el total:
+
+Agregar despues del boton "Agregar Linea":
+
+```razor
+<div class="alert alert-info">
+    <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
+</div>
+
+<button class="btn btn-primary w-100" @onclick="RegistrarDocumento">Registrar Documento</button>
+```
+
+Agregar en el @code:
+
+```csharp
+private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
+private int secuenciaDocumento = 1;
+
+private void RegistrarDocumento()
+{
+    if (string.IsNullOrWhiteSpace(documentoActual.NombreReceptor))
+    {
+        return;
+    }
+
+    if (documentoActual.LineasDetalle.Any(l => string.IsNullOrWhiteSpace(l.NombreProducto)))
+    {
+        return;
+    }
+
+    documentoActual.NumeroDocumento = secuenciaDocumento++;
+    listaDocumentos.Add(documentoActual);
+    PrepararNuevoDocumento();
+}
+
+private void PrepararNuevoDocumento()
+{
+    documentoActual = new DocumentoVenta
+    {
+        FechaEmision = DateTime.Now,
+        LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
+    };
 }
