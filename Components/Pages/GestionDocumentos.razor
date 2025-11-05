@@ -1,112 +1,118 @@
 ﻿@page "/documentos"
 @using SistemaFacturas.Modelos
+@rendermode InteractiveServer
 
 <PageTitle>Gestion de Documentos</PageTitle>
 
-<h3>Sistema de Documentos de Venta</h3>
+<div class="container mt-4">
+    <h3 class="mb-4">Sistema de Documentos de Venta</h3>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Crear Documento Nuevo</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Fecha de Emision</label>
-                    <input type="date" class="form-control" @bind="documentoActual.FechaEmision" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Crear Documento Nuevo</h5>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Nombre del Receptor</label>
-                    <input type="text" class="form-control" @bind="documentoActual.NombreReceptor" placeholder="Ingrese el nombre completo" />
-                </div>
-
-                <h6>Lineas de Productos</h6>
-                @foreach (var linea in documentoActual.LineasDetalle)
-                {
-                    <div class="border p-2 mb-2">
-                        <div class="row">
-                            <div class="col-md-5">
-                                <input type="text" class="form-control form-control-sm" placeholder="Producto" @bind="linea.NombreProducto" />
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control form-control-sm" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
-                            </div>
-                            <div class="col-md-2">
-                                <input type="number" class="form-control form-control-sm" placeholder="Cant" @bind="linea.CantidadProducto" />
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-danger btn-sm w-100" @onclick="() => QuitarLinea(linea)">X</button>
-                            </div>
-                        </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de Emision</label>
+                        <input type="date" class="form-control" @bind="documentoActual.FechaEmision" />
                     </div>
-                }
 
-                <button class="btn btn-secondary btn-sm mb-3" @onclick="AgregarLinea">+ Agregar Linea</button>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre del Receptor</label>
+                        <input type="text" class="form-control" @bind="documentoActual.NombreReceptor" placeholder="Ingrese el nombre completo" />
+                    </div>
 
-                <div class="alert alert-info">
-                    <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
-                </div>
-
-                <button class="btn btn-primary w-100" @onclick="RegistrarDocumento">Registrar Documento</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Documentos Emitidos</h5>
-            </div>
-            <div class="card-body">
-                @if (listaDocumentos.Count == 0)
-                {
-                    <p class="text-muted">No se han emitido documentos</p>
-                }
-                else
-                {
-                    @foreach (var documento in listaDocumentos)
+                    <h6 class="mt-4 mb-3">Lineas de Productos</h6>
+                    @foreach (var linea in documentoActual.LineasDetalle)
                     {
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h6>Documento #@documento.NumeroDocumento</h6>
-                                <p class="mb-1"><strong>Fecha de Emision:</strong> @documento.FechaEmision.ToString("dd/MM/yyyy")</p>
-                                <p class="mb-1"><strong>Receptor:</strong> @documento.NombreReceptor</p>
-                                <p class="mb-2"><strong>Lineas de Detalle:</strong></p>
-                                <ul class="small">
-                                    @foreach (var linea in documento.LineasDetalle)
-                                    {
-                                        <li>@linea.NombreProducto - $@linea.PrecioUnitario x @linea.CantidadProducto = $@linea.ImporteLinea.ToString("N2")</li>
-                                    }
-                                </ul>
-                                <h5 class="text-end">Importe Total: $@documento.ImporteTotal.ToString("N2")</h5>
+                        <div class="border rounded p-3 mb-2 bg-light">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control" placeholder="Nombre del producto" @bind="linea.NombreProducto" />
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control" placeholder="Cant" @bind="linea.CantidadProducto" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-danger w-100" @onclick="() => QuitarLinea(linea)">
+                                        <i class="bi bi-trash"></i> X
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <small class="text-muted">Subtotal: $@linea.ImporteLinea.ToString("N2")</small>
                             </div>
                         </div>
                     }
-                }
+
+                    <button class="btn btn-secondary mb-3" @onclick="AgregarLinea">
+                        + Agregar Linea
+                    </button>
+
+                    <div class="alert alert-info">
+                        <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
+                    </div>
+
+                    <button class="btn btn-primary w-100" @onclick="RegistrarDocumento">
+                        Registrar Documento
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Documentos Registrados</h5>
+                </div>
+                <div class="card-body">
+                    @if (!listaDocumentos.Any())
+                    {
+                        <p class="text-muted text-center">No hay documentos registrados</p>
+                    }
+                    else
+                    {
+                        @foreach (var doc in listaDocumentos.OrderByDescending(d => d.NumeroDocumento))
+                        {
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Documento #@doc.NumeroDocumento</h6>
+                                    <p class="mb-1"><strong>Fecha:</strong> @doc.FechaEmision.ToString("dd/MM/yyyy")</p>
+                                    <p class="mb-1"><strong>Receptor:</strong> @doc.NombreReceptor</p>
+                                    <p class="mb-1"><strong>Total:</strong> $@doc.ImporteTotal.ToString("N2")</p>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Productos:</small>
+                                        <ul class="small mb-0">
+                                            @foreach (var linea in doc.LineasDetalle)
+                                            {
+                                                <li>@linea.NombreProducto - @linea.CantidadProducto x $@linea.PrecioUnitario.ToString("N2")</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @code {
-    private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
     private DocumentoVenta documentoActual = new DocumentoVenta();
+    private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
     private int secuenciaDocumento = 1;
 
     protected override void OnInitialized()
     {
-        PrepararNuevoDocumento();
-    }
-
-    private void PrepararNuevoDocumento()
-    {
-        documentoActual = new DocumentoVenta
-        {
-            FechaEmision = DateTime.Now,
-            LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
-        };
+        documentoActual.FechaEmision = DateTime.Now;
+        documentoActual.LineasDetalle.Add(new ProductoLinea());
     }
 
     private void AgregarLinea()
@@ -137,5 +143,14 @@
         documentoActual.NumeroDocumento = secuenciaDocumento++;
         listaDocumentos.Add(documentoActual);
         PrepararNuevoDocumento();
+    }
+
+    private void PrepararNuevoDocumento()
+    {
+        documentoActual = new DocumentoVenta
+        {
+            FechaEmision = DateTime.Now,
+            LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
+        };
     }
 }
