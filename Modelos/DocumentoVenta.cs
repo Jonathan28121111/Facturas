@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace SistemaFacturas.Modelos
 {
     public class DocumentoVenta
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int NumeroDocumento { get; set; }
         public DateTime FechaEmision { get; set; }
-        public string NombreReceptor { get; set; }
+        public string NombreReceptor { get; set; } = "";
         public List<ProductoLinea> LineasDetalle { get; set; } = new List<ProductoLinea>();
 
-        public decimal ImporteTotal => LineasDetalle.Sum(l => l.ImporteLinea);
+        [NotMapped]
+        public decimal ImporteTotal => LineasDetalle?.Sum(l => l.ImporteLinea) ?? 0;
     }
 }
