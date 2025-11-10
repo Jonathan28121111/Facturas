@@ -8,6 +8,7 @@ namespace SistemaFacturas.Modelos
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         public int DocumentoId { get; set; }
 
         [Required]
