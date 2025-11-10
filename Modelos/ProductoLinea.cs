@@ -9,9 +9,15 @@ namespace SistemaFacturas.Modelos
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int DocumentoId { get; set; }
-        public string NombreProducto { get; set; } = "";
+
+        [Required]
+        public string NombreProducto { get; set; } = string.Empty;
+
+        [Range(0, double.MaxValue)]
         public decimal PrecioUnitario { get; set; }
-        public int CantidadProducto { get; set; } = 1;
+
+        [Range(0, int.MaxValue)]
+        public int CantidadProducto { get; set; } = 1;      
 
         [NotMapped]
         public decimal ImporteLinea => PrecioUnitario * CantidadProducto;

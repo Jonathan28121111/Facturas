@@ -11,11 +11,15 @@ namespace SistemaFacturas.Modelos
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int NumeroDocumento { get; set; }
-        public DateTime FechaEmision { get; set; }
-        public string NombreReceptor { get; set; } = "";
+
+        public DateTime FechaEmision { get; set; } = DateTime.Now;
+
+        [Required]
+        public string NombreReceptor { get; set; } = string.Empty;
+
         public List<ProductoLinea> LineasDetalle { get; set; } = new List<ProductoLinea>();
 
         [NotMapped]
-        public decimal ImporteTotal => LineasDetalle?.Sum(l => l.ImporteLinea) ?? 0;
+        public decimal ImporteTotal => LineasDetalle?.Sum(l => l.ImporteLinea) ?? 0m;
     }
-}
+}       
