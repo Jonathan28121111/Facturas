@@ -16,7 +16,7 @@ namespace SistemaFacturas.Modelos
 
         [Required]
         public string NombreReceptor { get; set; } = string.Empty;
-
+[Required]
         public List<ProductoLinea> LineasDetalle { get; set; } = new List<ProductoLinea>();
 
         [NotMapped]
