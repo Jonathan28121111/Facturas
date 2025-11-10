@@ -22,4 +22,4 @@ namespace SistemaFacturas.Modelos
         [NotMapped]
         public decimal ImporteTotal => LineasDetalle?.Sum(l => l.ImporteLinea) ?? 0m;
     }
-}       
+}
