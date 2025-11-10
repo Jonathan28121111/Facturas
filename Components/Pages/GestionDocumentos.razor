@@ -8,199 +8,35 @@
 <PageTitle>Gestion de Documentos</PageTitle>
 
 <style>
-    .container {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-
-    h1 {
-        text-align: center;
-        margin-bottom: 40px;
-        font-size: 2rem;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 25px;
-        margin-bottom: 20px;
-        background: white;
-    }
-
-        .card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-        }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-    .product-row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        padding: 15px;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        background: #fafafa;
-        flex-wrap: wrap;
-    }
-
-        .product-row input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-    .product-name {
-        flex: 2;
-        min-width: 200px;
-    }
-
-    .product-price {
-        flex: 1;
-        min-width: 100px;
-    }
-
-    .product-qty {
-        flex: 1;
-        min-width: 80px;
-    }
-
-    .btn-remove {
-        padding: 8px 15px;
-        border: 1px solid #ddd;
-        background: white;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-        .btn-remove:hover {
-            background: #f5f5f5;
-        }
-
-    .subtotal {
-        width: 100%;
-        text-align: right;
-        margin-top: 5px;
-        font-size: 0.9rem;
-        color: #666;
-    }
-
-    .btn {
-        padding: 10px 20px;
-        border: 1px solid #ddd;
-        background: white;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-        .btn:hover {
-            background: #f5f5f5;
-        }
-
-    .btn-primary {
-        width: 100%;
-        padding: 12px;
-        background: #eee;
-        color: #000;
-        border: 1px solid #ddd;
-        font-weight: 600;
-    }
-
-        .btn-primary:hover {
-            background: #ddd;
-        }
-
-    .total-box {
-        padding: 20px;
-        background: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        text-align: center;
-        margin: 20px 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .document-item {
-        padding: 15px;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
-
-        .document-item h3 {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-
-        .document-item p {
-            margin: 5px 0;
-            font-size: 0.95rem;
-        }
-
-    .product-list {
-        margin-top: 10px;
-        padding: 10px;
-        background: #fafafa;
-        border-radius: 4px;
-    }
-
-        .product-list ul {
-            list-style: none;
-            padding: 0;
-            margin: 5px 0 0 0;
-        }
-
-        .product-list li {
-            padding: 3px 0;
-            font-size: 0.9rem;
-        }
-
-    .empty {
-        text-align: center;
-        color: #999;
-        padding: 40px;
-    }
-
-    .detalle-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1050;
-    }
-
-    .detalle-modal {
-        background: white;
-        padding: 20px;
-        width: 90%;
-        max-width: 700px;
-        border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
+    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    h1 { text-align: center; margin-bottom: 40px; font-size: 2rem; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 25px; margin-bottom: 20px; background: white; }
+    .card h2 { font-size: 1.3rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .product-row { display: flex; gap: 10px; margin-bottom: 10px; padding: 15px; border: 1px solid #eee; border-radius: 4px; background: #fafafa; flex-wrap: wrap; }
+    .product-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .product-name { flex: 2; min-width: 200px; }
+    .product-price { flex: 1; min-width: 100px; }
+    .product-qty { flex: 1; min-width: 80px; }
+    .btn-remove { padding: 8px 15px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; }
+    .btn-remove:hover { background: #f5f5f5; }
+    .subtotal { width: 100%; text-align: right; margin-top: 5px; font-size: 0.9rem; color: #666; }
+    .btn { padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn:hover { background: #f5f5f5; }
+    .btn-primary { width: 100%; padding: 12px; background: #eee; color: #000; border: 1px solid #ddd; font-weight: 600; }
+    .btn-primary:hover { background: #ddd; }
+    .total-box { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; text-align: center; margin: 20px 0; font-size: 1.5rem; font-weight: 700; }
+    .document-item { padding: 15px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 15px; }
+    .document-item h3 { font-size: 1.1rem; margin-bottom: 10px; }
+    .document-item p { margin: 5px 0; font-size: 0.95rem; }
+    .product-list { margin-top: 10px; padding: 10px; background: #fafafa; border-radius: 4px; }
+    .product-list ul { list-style: none; padding: 0; margin: 5px 0 0 0; }
+    .product-list li { padding: 3px 0; font-size: 0.9rem; }
+    .empty { text-align: center; color: #999; padding: 40px; }
+    .detalle-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1050; }
+    .detalle-modal { background: white; padding: 20px; width: 90%; max-width: 700px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 </style>
 
 <div class="container">
@@ -304,16 +140,17 @@
 
             <table class="table">
                 <thead>
-                    <tr><th>Producto</th><th>Cant</th><th>Precio</th><th>Importe</th></tr>
+                    <tr><th>Producto</th><th>Cant</th><th>Precio</th><th>Importe</th><th></th></tr>
                 </thead>
                 <tbody>
-                    @foreach (var l in selectedDocument.LineasDetalle)
+                    @foreach (var l in selectedDocument.LineasDetalle.ToList())
                     {
                         <tr>
                             <td>@l.NombreProducto</td>
                             <td>@l.CantidadProducto</td>
                             <td>@l.PrecioUnitario.ToString("N2")</td>
                             <td>@l.ImporteLinea.ToString("N2")</td>
+                            <td><button class="btn" @onclick="() => EliminarLineaDetalle(l)">Eliminar</button></td>
                         </tr>
                     }
                 </tbody>
@@ -387,7 +224,8 @@
         {
             foreach (var linea in documentoActual.LineasDetalle)
             {
-                linea.DocumentoId = documentoActual.NumeroDocumento;
+                if (linea.Id == 0)
+                    linea.DocumentoId = documentoActual.NumeroDocumento;
             }
 
             await DbContext.SaveChangesAsync();
@@ -459,6 +297,29 @@
 
         showDetails = selectedDocument != null;
         StateHasChanged();
+    }
+
+    private async Task EliminarLineaDetalle(ProductoLinea linea)
+    {
+        if (selectedDocument == null) return;
+
+        if (linea.Id > 0)
+        {
+            var lineaDb = await DbContext.Set<ProductoLinea>().FindAsync(linea.Id);
+            if (lineaDb != null)
+            {
+                DbContext.Set<ProductoLinea>().Remove(lineaDb);
+                await DbContext.SaveChangesAsync();
+                selectedDocument = await DbContext.Documentos
+                    .Include(d => d.LineasDetalle)
+                    .FirstOrDefaultAsync(d => d.NumeroDocumento == selectedDocument.NumeroDocumento);
+                await CargarDocumentos();
+            }
+        }
+        else
+        {
+            selectedDocument.LineasDetalle.Remove(linea);
+        }
     }
 
     private void CerrarDetalle()
