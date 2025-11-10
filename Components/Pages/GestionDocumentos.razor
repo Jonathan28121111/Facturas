@@ -1,0 +1,330 @@
+﻿@page "/documentos"
+@using SistemaFacturas.Modelos
+@using SistemaFacturas.Data
+@using Microsoft.EntityFrameworkCore
+@inject FacturasDbContext DbContext
+@rendermode InteractiveServer
+
+<PageTitle>Gestion de Documentos</PageTitle>
+
+<style>
+    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    h1 { text-align: center; margin-bottom: 40px; font-size: 2rem; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 25px; margin-bottom: 20px; background: white; }
+    .card h2 { font-size: 1.3rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .product-row { display: flex; gap: 10px; margin-bottom: 10px; padding: 15px; border: 1px solid #eee; border-radius: 4px; background: #fafafa; flex-wrap: wrap; }
+    .product-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .product-name { flex: 2; min-width: 200px; }
+    .product-price { flex: 1; min-width: 100px; }
+    .product-qty { flex: 1; min-width: 80px; }
+    .btn-remove { padding: 8px 15px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; }
+    .btn-remove:hover { background: #f5f5f5; }
+    .subtotal { width: 100%; text-align: right; margin-top: 5px; font-size: 0.9rem; color: #666; }
+    .btn { padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn:hover { background: #f5f5f5; }
+    .btn-primary { width: 100%; padding: 12px; background: #eee; color: #000; border: 1px solid #ddd; font-weight: 600; }
+    .btn-primary:hover { background: #ddd; }
+    .total-box { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; text-align: center; margin: 20px 0; font-size: 1.5rem; font-weight: 700; }
+    .document-item { padding: 15px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 15px; }
+    .document-item h3 { font-size: 1.1rem; margin-bottom: 10px; }
+    .document-item p { margin: 5px 0; font-size: 0.95rem; }
+    .product-list { margin-top: 10px; padding: 10px; background: #fafafa; border-radius: 4px; }
+    .product-list ul { list-style: none; padding: 0; margin: 5px 0 0 0; }
+    .product-list li { padding: 3px 0; font-size: 0.9rem; }
+    .empty { text-align: center; color: #999; padding: 40px; }
+    .detalle-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1050; }
+    .detalle-modal { background: white; padding: 20px; width: 90%; max-width: 700px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+</style>
+
+<div class="container">
+    <h1>Sistema de Documentos de Venta</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <h2>@(isEditMode ? "Editar Documento" : "Crear Documento")</h2>
+
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" @bind="documentoActual.FechaEmision" />
+                </div>
+
+                <div class="form-group">
+                    <label>Receptor</label>
+                    <input type="text" @bind="documentoActual.NombreReceptor" placeholder="Nombre del receptor" />
+                </div>
+
+                <div class="form-group">
+                    <label>Productos</label>
+                    <button class="btn" @onclick="AgregarLinea">+ Agregar Producto</button>
+                </div>
+
+                @foreach (var linea in documentoActual.LineasDetalle.ToList())
+                {
+                    <div class="product-row">
+                        <input class="product-name" type="text" placeholder="Producto" @bind="linea.NombreProducto" />
+                        <input class="product-price" type="number" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
+                        <input class="product-qty" type="number" placeholder="Cant" @bind="linea.CantidadProducto" />
+                        <button class="btn-remove" @onclick="() => QuitarLinea(linea)">×</button>
+                        <div class="subtotal">Subtotal: $@linea.ImporteLinea.ToString("N2")</div>
+                    </div>
+                }
+
+                <div class="total-box">
+                    Total: $@documentoActual.ImporteTotal.ToString("N2")
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" @onclick="GuardarDocumento">@(isEditMode ? "Guardar cambios" : "Registrar")</button>
+                    @if (isEditMode)
+                    {
+                        <button class="btn" @onclick="CancelarEdicion">Cancelar</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <h2>Documentos Registrados</h2>
+
+                @if (!listaDocumentos.Any())
+                {
+                    <div class="empty">
+                        No hay documentos
+                    </div>
+                }
+                else
+                {
+                    @foreach (var doc in listaDocumentos.OrderByDescending(d => d.NumeroDocumento))
+                    {
+                        <div class="document-item">
+                            <h3>Documento #@doc.NumeroDocumento</h3>
+                            <p><strong>Fecha:</strong> @doc.FechaEmision.ToString("dd/MM/yyyy")</p>
+                            <p><strong>Receptor:</strong> @doc.NombreReceptor</p>
+                            <p><strong>Total:</strong> $@doc.ImporteTotal.ToString("N2")</p>
+
+                            <div class="product-list">
+                                <strong>Productos:</strong>
+                                <ul>
+                                    @foreach (var linea in doc.LineasDetalle)
+                                    {
+                                        <li>@linea.NombreProducto - @linea.CantidadProducto × $@linea.PrecioUnitario.ToString("N2")</li>
+                                    }
+                                </ul>
+                            </div>
+
+                            <div class="mt-2 d-flex gap-2">
+                                <button class="btn" @onclick="() => EditarDocumento(doc)">Editar</button>
+                                <button class="btn" @onclick="() => EliminarDocumento(doc)">Eliminar</button>
+                                <button class="btn" @onclick="() => MostrarDetalle(doc)">Detalle de factura</button>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showDetails && selectedDocument != null)
+{
+    <div class="detalle-overlay" @onclick="CerrarDetalle">
+        <div class="detalle-modal" @onclick:stopPropagation>
+            <h3>Detalle - Documento #@selectedDocument.NumeroDocumento</h3>
+            <p><strong>Fecha:</strong> @selectedDocument.FechaEmision.ToString("dd/MM/yyyy")</p>
+            <p><strong>Receptor:</strong> @selectedDocument.NombreReceptor</p>
+
+            <table class="table">
+                <thead>
+                    <tr><th>Producto</th><th>Cant</th><th>Precio</th><th>Importe</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in selectedDocument.LineasDetalle.ToList())
+                    {
+                        <tr>
+                            <td>@l.NombreProducto</td>
+                            <td>@l.CantidadProducto</td>
+                            <td>@l.PrecioUnitario.ToString("N2")</td>
+                            <td>@l.ImporteLinea.ToString("N2")</td>
+                            <td><button class="btn" @onclick="() => EliminarLineaDetalle(l)">Eliminar</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="text-end">
+                <strong>Total: $@selectedDocument.ImporteTotal.ToString("N2")</strong>
+            </div>
+
+            <div class="mt-3 d-flex gap-2 justify-content-end">
+                <button class="btn" @onclick="CerrarDetalle">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DocumentoVenta documentoActual = new DocumentoVenta();
+    private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
+    private bool isEditMode = false;
+
+    private DocumentoVenta? selectedDocument;
+    private bool showDetails = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PrepararNuevoDocumento();
+        await CargarDocumentos();
+    }
+
+    private async Task CargarDocumentos()
+    {
+        listaDocumentos = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .OrderByDescending(d => d.NumeroDocumento)
+            .ToListAsync();
+    }
+
+    private void AgregarLinea()
+    {
+        documentoActual.LineasDetalle.Add(new ProductoLinea());
+    }
+
+    private void QuitarLinea(ProductoLinea linea)
+    {
+        if (linea == null) return;
+
+        documentoActual.LineasDetalle.Remove(linea);
+
+        if (isEditMode && linea.Id > 0)
+        {
+            var tracked = DbContext.Set<ProductoLinea>().Local.FirstOrDefault(l => l.Id == linea.Id);
+            if (tracked != null)
+            {
+                DbContext.Set<ProductoLinea>().Remove(tracked);
+            }
+            else
+            {
+                DbContext.Entry(linea).State = EntityState.Deleted;
+            }
+        }
+    }
+
+    private async Task GuardarDocumento()
+    {
+        if (string.IsNullOrWhiteSpace(documentoActual.NombreReceptor)) return;
+        if (documentoActual.LineasDetalle == null || !documentoActual.LineasDetalle.Any()) return;
+        if (documentoActual.LineasDetalle.Any(l => string.IsNullOrWhiteSpace(l.NombreProducto))) return;
+
+        if (isEditMode && documentoActual.NumeroDocumento > 0)
+        {
+            foreach (var linea in documentoActual.LineasDetalle)
+            {
+                if (linea.Id == 0)
+                    linea.DocumentoId = documentoActual.NumeroDocumento;
+            }
+
+            await DbContext.SaveChangesAsync();
+            isEditMode = false;
+        }
+        else
+        {
+            DbContext.Documentos.Add(documentoActual);
+            await DbContext.SaveChangesAsync();
+        }
+
+        await CargarDocumentos();
+        PrepararNuevoDocumento();
+    }
+
+    private async Task EditarDocumento(DocumentoVenta doc)
+    {
+        var tracked = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .FirstOrDefaultAsync(d => d.NumeroDocumento == doc.NumeroDocumento);
+
+        if (tracked != null)
+        {
+            documentoActual = tracked;
+            isEditMode = true;
+        }
+    }
+
+    private async Task EliminarDocumento(DocumentoVenta doc)
+    {
+        var toDelete = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .FirstOrDefaultAsync(d => d.NumeroDocumento == doc.NumeroDocumento);
+
+        if (toDelete != null)
+        {
+            DbContext.Documentos.Remove(toDelete);
+            await DbContext.SaveChangesAsync();
+            await CargarDocumentos();
+
+            if (isEditMode && documentoActual.NumeroDocumento == toDelete.NumeroDocumento)
+            {
+                PrepararNuevoDocumento();
+                isEditMode = false;
+            }
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        PrepararNuevoDocumento();
+        isEditMode = false;
+    }
+
+    private void PrepararNuevoDocumento()
+    {
+        documentoActual = new DocumentoVenta
+        {
+            FechaEmision = DateTime.Now,
+            LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
+        };
+    }
+
+    private async Task MostrarDetalle(DocumentoVenta doc)
+    {
+        selectedDocument = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .FirstOrDefaultAsync(d => d.NumeroDocumento == doc.NumeroDocumento);
+
+        showDetails = selectedDocument != null;
+        StateHasChanged();
+    }
+
+    private async Task EliminarLineaDetalle(ProductoLinea linea)
+    {
+        if (selectedDocument == null) return;
+
+        if (linea.Id > 0)
+        {
+            var lineaDb = await DbContext.Set<ProductoLinea>().FindAsync(linea.Id);
+            if (lineaDb != null)
+            {
+                DbContext.Set<ProductoLinea>().Remove(lineaDb);
+                await DbContext.SaveChangesAsync();
+                selectedDocument = await DbContext.Documentos
+                    .Include(d => d.LineasDetalle)
+                    .FirstOrDefaultAsync(d => d.NumeroDocumento == selectedDocument.NumeroDocumento);
+                await CargarDocumentos();
+            }
+        }
+        else
+        {
+            selectedDocument.LineasDetalle.Remove(linea);
+        }
+    }
+
+    private void CerrarDetalle()
+    {
+        showDetails = false;
+        selectedDocument = null;
+    }
+}
