@@ -1,6 +1,10 @@
 ﻿@page "/documentos"
 @using SistemaFacturas.Modelos
+@using SistemaFacturas.Data
+@using Microsoft.EntityFrameworkCore
+@inject FacturasDbContext DbContext
 @rendermode InteractiveServer
+@implements IDisposable
 
 <PageTitle>Gestion de Documentos</PageTitle>
 
@@ -107,12 +111,20 @@
 @code {
     private DocumentoVenta documentoActual = new DocumentoVenta();
     private List<DocumentoVenta> listaDocumentos = new List<DocumentoVenta>();
-    private int secuenciaDocumento = 1;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         documentoActual.FechaEmision = DateTime.Now;
         documentoActual.LineasDetalle.Add(new ProductoLinea());
+        await CargarDocumentos();
+    }
+
+    private async Task CargarDocumentos()
+    {
+        listaDocumentos = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .OrderByDescending(d => d.NumeroDocumento)
+            .ToListAsync();
     }
 
     private void AgregarLinea()
@@ -128,7 +140,7 @@
         }
     }
 
-    private void RegistrarDocumento()
+    private async Task RegistrarDocumento()
     {
         if (string.IsNullOrWhiteSpace(documentoActual.NombreReceptor))
         {
@@ -140,8 +152,9 @@
             return;
         }
 
-        documentoActual.NumeroDocumento = secuenciaDocumento++;
-        listaDocumentos.Add(documentoActual);
+        DbContext.Documentos.Add(documentoActual);
+        await DbContext.SaveChangesAsync();
+        await CargarDocumentos();
         PrepararNuevoDocumento();
     }
 
@@ -152,5 +165,10 @@
             FechaEmision = DateTime.Now,
             LineasDetalle = new List<ProductoLinea> { new ProductoLinea() }
         };
+    }
+
+    public void Dispose()
+    {
+        DbContext?.Dispose();
     }
 }
