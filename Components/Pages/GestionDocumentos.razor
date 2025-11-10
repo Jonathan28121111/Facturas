@@ -8,101 +8,260 @@
 
 <PageTitle>Gestion de Documentos</PageTitle>
 
-<div class="container mt-4">
-    <h3 class="mb-4">Sistema de Documentos de Venta</h3>
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 2rem;
+    }
+
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 20px;
+        background: white;
+    }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+    .product-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        background: #fafafa;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+        .product-row input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+    .product-name {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .product-price {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .product-qty {
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .btn-remove {
+        padding: 8px 15px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .btn-remove:hover {
+            background: #f5f5f5;
+        }
+
+    .subtotal {
+        width: 100%;
+        text-align: right;
+        margin-top: 5px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+        .btn:hover {
+            background: #f5f5f5;
+        }
+
+    .btn-primary {
+        width: 100%;
+        padding: 12px;
+        background: #eee;
+        color: #000;
+        border: 1px solid #ddd;
+        font-weight: 600;
+    }
+
+        .btn-primary:hover {
+            background: #ddd;
+        }
+
+    .total-box {
+        padding: 20px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+        margin: 20px 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .document-item {
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+
+        .document-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .document-item p {
+            margin: 5px 0;
+            font-size: 0.95rem;
+        }
+
+    .product-list {
+        margin-top: 10px;
+        padding: 10px;
+        background: #fafafa;
+        border-radius: 4px;
+    }
+
+        .product-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+
+        .product-list li {
+            padding: 3px 0;
+            font-size: 0.9rem;
+        }
+
+    .empty {
+        text-align: center;
+        color: #999;
+        padding: 40px;
+    }
+</style>
+
+<div class="container">
+    <h1>Sistema de Documentos de Venta</h1>
 
     <div class="row">
         <div class="col-md-6">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Crear Documento Nuevo</h5>
+            <div class="card">
+                <h2>Crear Documento</h2>
+
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" @bind="documentoActual.FechaEmision" />
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Fecha de Emision</label>
-                        <input type="date" class="form-control" @bind="documentoActual.FechaEmision" />
-                    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre del Receptor</label>
-                        <input type="text" class="form-control" @bind="documentoActual.NombreReceptor" placeholder="Ingrese el nombre completo" />
-                    </div>
-
-                    <h6 class="mt-4 mb-3">Lineas de Productos</h6>
-                    @foreach (var linea in documentoActual.LineasDetalle)
-                    {
-                        <div class="border rounded p-3 mb-2 bg-light">
-                            <div class="row g-2">
-                                <div class="col-md-5">
-                                    <input type="text" class="form-control" placeholder="Nombre del producto" @bind="linea.NombreProducto" />
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="number" class="form-control" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
-                                </div>
-                                <div class="col-md-2">
-                                    <input type="number" class="form-control" placeholder="Cant" @bind="linea.CantidadProducto" />
-                                </div>
-                                <div class="col-md-2">
-                                    <button class="btn btn-danger w-100" @onclick="() => QuitarLinea(linea)">
-                                        <i class="bi bi-trash"></i> X
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-end">
-                                <small class="text-muted">Subtotal: $@linea.ImporteLinea.ToString("N2")</small>
-                            </div>
-                        </div>
-                    }
-
-                    <button class="btn btn-secondary mb-3" @onclick="AgregarLinea">
-                        + Agregar Linea
-                    </button>
-
-                    <div class="alert alert-info">
-                        <strong>Importe Total: $@documentoActual.ImporteTotal.ToString("N2")</strong>
-                    </div>
-
-                    <button class="btn btn-primary w-100" @onclick="RegistrarDocumento">
-                        Registrar Documento
-                    </button>
+                <div class="form-group">
+                    <label>Receptor</label>
+                    <input type="text" @bind="documentoActual.NombreReceptor" placeholder="Nombre del receptor" />
                 </div>
+
+                <div class="form-group">
+                    <label>Productos</label>
+                    <button class="btn" @onclick="AgregarLinea">+ Agregar Producto</button>
+                </div>
+
+                @foreach (var linea in documentoActual.LineasDetalle)
+                {
+                    <div class="product-row">
+                        <input class="product-name" type="text" placeholder="Producto" @bind="linea.NombreProducto" />
+                        <input class="product-price" type="number" placeholder="Precio" @bind="linea.PrecioUnitario" step="0.01" />
+                        <input class="product-qty" type="number" placeholder="Cant" @bind="linea.CantidadProducto" />
+                        <button class="btn-remove" @onclick="() => QuitarLinea(linea)">×</button>
+                        <div class="subtotal">Subtotal: $@linea.ImporteLinea.ToString("N2")</div>
+                    </div>
+                }
+
+                <div class="total-box">
+                    Total: $@documentoActual.ImporteTotal.ToString("N2")
+                </div>
+
+                <button class="btn btn-primary" @onclick="RegistrarDocumento">
+                    Registrar
+                </button>
             </div>
         </div>
 
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Documentos Registrados</h5>
-                </div>
-                <div class="card-body">
-                    @if (!listaDocumentos.Any())
+            <div class="card">
+                <h2>Documentos Registrados</h2>
+
+                @if (!listaDocumentos.Any())
+                {
+                    <div class="empty">
+                        No hay documentos
+                    </div>
+                }
+                else
+                {
+                    @foreach (var doc in listaDocumentos.OrderByDescending(d => d.NumeroDocumento))
                     {
-                        <p class="text-muted text-center">No hay documentos registrados</p>
-                    }
-                    else
-                    {
-                        @foreach (var doc in listaDocumentos.OrderByDescending(d => d.NumeroDocumento))
-                        {
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h6 class="card-title">Documento #@doc.NumeroDocumento</h6>
-                                    <p class="mb-1"><strong>Fecha:</strong> @doc.FechaEmision.ToString("dd/MM/yyyy")</p>
-                                    <p class="mb-1"><strong>Receptor:</strong> @doc.NombreReceptor</p>
-                                    <p class="mb-1"><strong>Total:</strong> $@doc.ImporteTotal.ToString("N2")</p>
-                                    <div class="mt-2">
-                                        <small class="text-muted">Productos:</small>
-                                        <ul class="small mb-0">
-                                            @foreach (var linea in doc.LineasDetalle)
-                                            {
-                                                <li>@linea.NombreProducto - @linea.CantidadProducto x $@linea.PrecioUnitario.ToString("N2")</li>
-                                            }
-                                        </ul>
-                                    </div>
-                                </div>
+                        <div class="document-item">
+                            <h3>Documento #@doc.NumeroDocumento</h3>
+                            <p><strong>Fecha:</strong> @doc.FechaEmision.ToString("dd/MM/yyyy")</p>
+                            <p><strong>Receptor:</strong> @doc.NombreReceptor</p>
+                            <p><strong>Total:</strong> $@doc.ImporteTotal.ToString("N2")</p>
+
+                            <div class="product-list">
+                                <strong>Productos:</strong>
+                                <ul>
+                                    @foreach (var linea in doc.LineasDetalle)
+                                    {
+                                        <li>@linea.NombreProducto - @linea.CantidadProducto × $@linea.PrecioUnitario.ToString("N2")</li>
+                                    }
+                                </ul>
                             </div>
-                        }
+                        </div>
                     }
-                </div>
+                }
             </div>
         </div>
     </div>
