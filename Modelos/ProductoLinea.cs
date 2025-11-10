@@ -18,7 +18,7 @@ namespace SistemaFacturas.Modelos
         public decimal PrecioUnitario { get; set; }
 
         [Range(0, int.MaxValue)]
-        public int CantidadProducto { get; set; } = 1;      
+        public int CantidadProducto { get; set; } = 1;
 
         [NotMapped]
         public decimal ImporteLinea => PrecioUnitario * CantidadProducto;
