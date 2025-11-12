@@ -1,9 +1,79 @@
-﻿a@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
-@Body
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
 
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="documentos">
-        <span class="oi oi-document" aria-hidden="true"></span> Documentos
-    </NavLink>
+    .main-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 200px;
+        background: #f5f5f5;
+        border-right: 1px solid #ddd;
+        padding: 20px 0;
+    }
+
+        .sidebar h3 {
+            padding: 0 15px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-link {
+        display: block;
+        padding: 12px 15px;
+        color: #333;
+        text-decoration: none;
+    }
+
+        .nav-link:hover {
+            background: #e0e0e0;
+        }
+
+        .nav-link.active {
+            background: #d0d0d0;
+            font-weight: 600;
+        }
+
+    .content {
+        flex: 1;
+        padding: 20px;
+        background: #fafafa;
+    }
+</style>
+
+<div class="main-layout">
+    <div class="sidebar">
+        <h3>Sistema SAT</h3>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <NavLink class="nav-link" href="documentos">
+                    Documentos
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="reportes-sat">
+                    Reportes SAT
+                </NavLink>
+            </li>
+        </ul>
+    </div>
+    <div class="content">
+        @Body
+    </div>
 </div>
