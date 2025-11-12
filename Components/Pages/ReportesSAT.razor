@@ -1,0 +1,277 @@
+﻿@page "/reportes-sat"
+@using SistemaFacturas.Modelos
+@using SistemaFacturas.Data
+@using Microsoft.EntityFrameworkCore
+@inject FacturasDbContext DbContext
+@rendermode InteractiveServer
+
+<PageTitle>Reportes SAT</PageTitle>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+
+    h1 {
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+    }
+
+    .filtros {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            width: 200px;
+        }
+
+    .btn {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+    }
+
+        .btn:hover {
+            background: #f5f5f5;
+        }
+
+    .mes-section {
+        margin-bottom: 30px;
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .mes-header {
+        padding: 15px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+        font-weight: 600;
+    }
+
+    .mes-total {
+        float: right;
+    }
+
+    .tabla {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .tabla th {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .tabla td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+    .total-anual {
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+        .total-anual h3 {
+            margin: 0 0 10px 0;
+        }
+
+    .monto {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .empty {
+        text-align: center;
+        color: #999;
+        padding: 40px;
+    }
+</style>
+
+<div class="container">
+    <h1>Reportes SAT</h1>
+
+    <div class="filtros">
+        <div class="form-group">
+            <label>Seleccionar Año:</label>
+            <select @bind="añoSeleccionado">
+                <option value="">-- Seleccione --</option>
+                @foreach (var año in añosDisponibles.OrderByDescending(a => a))
+                {
+                    <option value="@año">@año</option>
+                }
+            </select>
+            <button class="btn" @onclick="GenerarReporte">Generar Reporte</button>
+        </div>
+    </div>
+
+    @if (reporteGenerado)
+    {
+        @if (!reportePorMes.Any())
+        {
+            <div class="empty">
+                No hay facturas para el año @añoSeleccionado
+            </div>
+        }
+        else
+        {
+            @foreach (var mes in reportePorMes.OrderBy(m => m.NumeroMes))
+            {
+                <div class="mes-section">
+                    <div class="mes-header">
+                        @mes.NombreMes @añoSeleccionado
+                        <span class="mes-total">Total: $@mes.TotalMes.ToString("N2")</span>
+                        <div style="clear: both;"></div>
+                    </div>
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Factura</th>
+                                <th>Fecha</th>
+                                <th>Receptor</th>
+                                <th>Productos</th>
+                                <th style="text-align: right;">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var factura in mes.Facturas)
+                            {
+                                <tr>
+                                    <td>@factura.NumeroDocumento</td>
+                                    <td>@factura.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                    <td>@factura.NombreReceptor</td>
+                                    <td>
+                                        @foreach (var linea in factura.LineasDetalle)
+                                        {
+                                            <div>@linea.NombreProducto (@linea.CantidadProducto x $@linea.PrecioUnitario.ToString("N2"))</div>
+                                        }
+                                    </td>
+                                    <td style="text-align: right;">$@factura.ImporteTotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <div class="total-anual">
+                <h3>Total Año @añoSeleccionado</h3>
+                <div class="monto">$@totalAnual.ToString("N2")</div>
+                <div style="margin-top: 10px;">@reportePorMes.Sum(m => m.Facturas.Count) facturas</div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string añoSeleccionado = string.Empty;
+    private List<int> añosDisponibles = new List<int>();
+    private List<ReporteMensual> reportePorMes = new List<ReporteMensual>();
+    private decimal totalAnual = 0;
+    private bool reporteGenerado = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAñosDisponibles();
+    }
+
+    private async Task CargarAñosDisponibles()
+    {
+        var facturas = await DbContext.Documentos.ToListAsync();
+
+        if (facturas.Any())
+        {
+            añosDisponibles = facturas
+                .Select(f => f.FechaEmision.Year)
+                .Distinct()
+                .OrderByDescending(a => a)
+                .ToList();
+        }
+        else
+        {
+            añosDisponibles.Add(DateTime.Now.Year);
+        }
+    }
+
+    private async Task GenerarReporte()
+    {
+        if (string.IsNullOrEmpty(añoSeleccionado))
+        {
+            return;
+        }
+
+        int año = int.Parse(añoSeleccionado);
+
+        var facturasDelAño = await DbContext.Documentos
+            .Include(d => d.LineasDetalle)
+            .Where(d => d.FechaEmision.Year == año)
+            .OrderBy(d => d.FechaEmision)
+            .ToListAsync();
+
+        reportePorMes = facturasDelAño
+            .GroupBy(f => f.FechaEmision.Month)
+            .Select(g => new ReporteMensual
+            {
+                NumeroMes = g.Key,
+                NombreMes = ObtenerNombreMes(g.Key),
+                Facturas = g.OrderBy(f => f.FechaEmision).ToList(),
+                TotalMes = g.Sum(f => f.ImporteTotal)
+            })
+            .OrderBy(m => m.NumeroMes)
+            .ToList();
+
+        totalAnual = reportePorMes.Sum(m => m.TotalMes);
+        reporteGenerado = true;
+    }
+
+    private string ObtenerNombreMes(int numeroMes)
+    {
+        return numeroMes switch
+        {
+            1 => "Enero",
+            2 => "Febrero",
+            3 => "Marzo",
+            4 => "Abril",
+            5 => "Mayo",
+            6 => "Junio",
+            7 => "Julio",
+            8 => "Agosto",
+            9 => "Septiembre",
+            10 => "Octubre",
+            11 => "Noviembre",
+            12 => "Diciembre",
+            _ => "Desconocido"
+        };
+    }
+
+    public class ReporteMensual
+    {
+        public int NumeroMes { get; set; }
+        public string NombreMes { get; set; } = string.Empty;
+        public List<DocumentoVenta> Facturas { get; set; } = new List<DocumentoVenta>();
+        public decimal TotalMes { get; set; }
+    }
+}
