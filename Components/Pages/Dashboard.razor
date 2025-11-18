@@ -1,0 +1,185 @@
+@page "/dashboard"
+@using SistemaFacturas.Services
+@inject ConsultasSistema Consultas
+
+<div class="dashboard-container">
+    @if (isLoading)
+    {
+        <div class="loading">Cargando datos...</div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error">Error: @errorMessage</div>
+    }
+    else
+    {
+        <h1 class="dashboard-title">Dashboard de Ventas</h1>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Producto Top</div>
+                <div class="stat-value">@(productoTop?.NombreProducto ?? "N/A")</div>
+                @if (productoTop != null)
+                {
+                    <small>@productoTop.TotalCantidad unidades</small>
+                }
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Mejor Mes</div>
+                <div class="stat-value">@(mesTop != null ? $"{mesTop.Mes}/{mesTop.Anno}" : "N/A")</div>
+                @if (mesTop != null)
+                {
+                    <small>@mesTop.TotalRevenue.ToString("C")</small>
+                }
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Lineas Promedio</div>
+                <div class="stat-value">@promedios.AvgLinesPerDocument.ToString("F2")</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Ticket Promedio</div>
+                <div class="stat-value">@promedios.AvgDocumentValue.ToString("C")</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="section">
+                    <h3 class="section-title">Tendencia Mensual</h3>
+                    @if (tendencia?.Any() ?? false)
+                    {
+                        @foreach (var m in tendencia)
+                        {
+                            <div class="data-row">
+                                <span>@m.Mes/@m.Anno (@m.DocumentCount docs)</span>
+                                <strong>@m.TotalRevenue.ToString("C")</strong>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No hay datos</p>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="section">
+                    <h3 class="section-title">Top Clientes</h3>
+                    @if (clientesTop?.Any() ?? false)
+                    {
+                        @for (int i = 0; i < clientesTop.Count; i++)
+                        {
+                            var c = clientesTop[i];
+                            <div class="data-row">
+                                <span>@(i + 1). @c.NombreReceptor</span>
+                                <strong>@c.TotalRevenue.ToString("C")</strong>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No hay datos</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Ventas por Dia</h3>
+            @if (ventasDia?.Any() ?? false)
+            {
+                @foreach (var d in ventasDia)
+                {
+                    <div class="data-row">
+                        <span>@d.DiaSemana (@d.DocumentCount docs)</span>
+                        <strong>@d.TotalRevenue.ToString("C")</strong>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>No hay datos</p>
+            }
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">Resumen Documentos</h3>
+            @if (resumenDocs?.Any() ?? false)
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Numero</th>
+                            <th>Fecha</th>
+                            <th>Lineas</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in resumenDocs)
+                        {
+                            <tr>
+                                <td>@r.NumeroDocumento</td>
+                                <td>@r.FechaEmision.ToShortDateString()</td>
+                                <td>@r.LineCount</td>
+                                <td>@r.Total.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>No hay datos</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private ProductoTopDto? productoTop;
+    private MesVentasDto? mesTop;
+    private List<MesVentasDto>? tendencia;
+    private List<ClienteTopDto>? clientesTop;
+    private List<ResumenDocumentoDto>? resumenDocs;
+    private List<ProductoTopDto>? topProductosMes;
+    private List<VentasDiaSemanaDto>? ventasDia;
+    private PromediosDto promedios = new(0, 0m);
+    private List<ProductoDecliveDto>? declive;
+    private List<ClienteRecurrenteDto>? recurrentes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            productoTop = await Consultas.GetProductoMasVendidoAsync();
+            mesTop = await Consultas.GetMesConMasVentasAsync();
+            tendencia = await Consultas.GetTendenciaMensualAsync();
+            clientesTop = await Consultas.GetClientesTopAsync();
+            resumenDocs = await Consultas.GetResumenDocumentosAsync();
+            topProductosMes = await Consultas.GetTopProductoPorMesAsync();
+            ventasDia = await Consultas.GetVentasPorDiaSemanaAsync();
+            promedios = await Consultas.GetPromediosAsync();
+            declive = await Consultas.GetProductosEnDecliveAsync();
+            recurrentes = await Consultas.GetClientesRecurrentesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
