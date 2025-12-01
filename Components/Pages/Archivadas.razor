@@ -1,0 +1,163 @@
+﻿using Facturas.Components.Pages;
+using Microsoft.AspNetCore.Components.Web;
+using SistemaFacturas.Modelos;
+using SistemaFacturas.Services;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Reflection.Emit;
+using System.Reflection.Metadata;
+using System.Runtime.Intrinsics.Arm;
+using static System.Net.Mime.MediaTypeNames;
+
+@page "/archivadas"
+@using SistemaFacturas.Services
+@using SistemaFacturas.Modelos
+@inject GestionArchivadas GestionArchivadas
+@rendermode InteractiveServer
+
+<PageTitle>Facturas Archivadas</PageTitle>
+
+<style>
+    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    h1 { text-align: center; margin - bottom: 40px; font - size: 2rem; }
+    .login - box {
+    max - width: 400px; margin: 100px auto; padding: 30px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+    .login - box h2 { margin - bottom: 20px; text - align: center; }
+    .form - group { margin - bottom: 20px; }
+    .form - group label { display: block; margin - bottom: 5px; font - weight: 600; }
+    .form - group input {
+    width: 100 %; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .btn {
+        padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn: hover {
+            background: #f5f5f5; }
+    .btn - primary {
+                width: 100 %; padding: 12px; background: #eee; color: #000; border: 1px solid #ddd; font-weight: 600; }
+    .btn - primary:hover {
+                    background: #ddd; }
+    .error - msg { color: red; margin - top: 10px; text - align: center; }
+    .document - item {
+                        padding: 15px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 15px; background: white; }
+    .document - item h3 { font - size: 1.1rem; margin - bottom: 10px; }
+    .document - item p { margin: 5px 0; font - size: 0.95rem; }
+    .product - list {
+                                margin - top: 10px; padding: 10px; background: #fafafa; border-radius: 4px; }
+    .product - list ul { list - style: none; padding: 0; margin: 5px 0 0 0; }
+    .product - list li { padding: 3px 0; font - size: 0.9rem; }
+    .empty {
+                                    text - align: center; color: #999; padding: 40px; }
+    .badge - archived {
+                                    display: inline - block; background: #ff9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px; }
+    .mt - 2 { margin - top: 10px; }
+</ style >
+
+@if(!autenticado)
+{
+    < div class= "login-box" >
+        < h2 > Acceso a Facturas Archivadas</h2>
+        <div class= "form-group" >
+            < label > Contrasena:</ label >
+            < input type = "password" @bind = "contrasenaIngresada" @onkeypress = "OnKeyPress" placeholder = "Ingrese contrasena" />
+        </ div >
+        < button class= "btn btn-primary" @onclick = "ValidarAcceso" > Acceder </ button >
+        @if(errorAuth)
+        {
+            < div class= "error-msg" > Contrasena incorrecta </ div >
+        }
+    </ div >
+}
+else
+{
+    < div class= "container" >
+        < h1 > Facturas Archivadas < span class= "badge-archived" > @facturasArchivadas.Count archivadas </ span ></ h1 >
+
+        < div style = "margin-bottom: 20px;" >
+            < button class= "btn" @onclick = "CerrarSesion" > Cerrar Sesion </ button >
+        </ div >
+
+        @if(!facturasArchivadas.Any())
+        {
+            < div class= "empty" >
+                No hay facturas archivadas
+            </div>
+        }
+        else
+{
+    @foreach(var doc in facturasArchivadas)
+            {
+                < div class= "document-item" >
+                    < h3 >
+                        Documento #@doc.NumeroDocumento
+                        < span class= "badge-archived" > ARCHIVADA </ span >
+                    </ h3 >
+                    < p >< strong > Fecha:</ strong > @doc.FechaEmision.ToString("dd/MM/yyyy") </ p >
+                    < p >< strong > Receptor:</ strong > @doc.NombreReceptor </ p >
+                    < p >< strong > Total:</ strong > $@doc.ImporteTotal.ToString("N2") </ p >
+
+                    < div class= "product-list" >
+                        < strong > Productos:</ strong >
+                        < ul >
+                            @foreach(var linea in doc.LineasDetalle)
+                            {
+                                < li > @linea.NombreProducto - @linea.CantidadProducto × $@linea.PrecioUnitario.ToString("N2") </ li >
+                            }
+                        </ ul >
+                    </ div >
+
+                    < div class= "mt-2" >
+                        < button class= "btn" @onclick = "() => Desarchivar(doc.NumeroDocumento)" > Desarchivar </ button >
+                    </ div >
+                </ div >
+            }
+        }
+    </ div >
+}
+
+@code {
+    private string contrasenaIngresada = string.Empty;
+private bool autenticado = false;
+private bool errorAuth = false;
+private List<DocumentoVenta> facturasArchivadas = new List<DocumentoVenta>();
+
+private async Task ValidarAcceso()
+{
+    if (GestionArchivadas.ValidarContrasena(contrasenaIngresada))
+    {
+        autenticado = true;
+        errorAuth = false;
+        await CargarFacturasArchivadas();
+    }
+    else
+    {
+        errorAuth = true;
+    }
+}
+
+private async Task CargarFacturasArchivadas()
+{
+    facturasArchivadas = await GestionArchivadas.ObtenerArchivadas();
+}
+
+private async Task Desarchivar(int numeroDocumento)
+{
+    await GestionArchivadas.DesarchivarDocumento(numeroDocumento);
+    await CargarFacturasArchivadas();
+}
+
+private void CerrarSesion()
+{
+    autenticado = false;
+    contrasenaIngresada = string.Empty;
+    errorAuth = false;
+    facturasArchivadas.Clear();
+}
+
+private async Task OnKeyPress(KeyboardEventArgs e)
+{
+    if (e.Key == "Enter")
+    {
+        await ValidarAcceso();
+    }
+}
+}
