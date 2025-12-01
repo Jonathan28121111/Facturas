@@ -116,12 +116,12 @@
 
     <div class="filtros">
         <div class="form-group">
-            <label>Seleccionar Año:</label>
-            <select @bind="añoSeleccionado">
+            <label>Seleccionar Ano:</label>
+            <select @bind="anoSeleccionado">
                 <option value="">-- Seleccione --</option>
-                @foreach (var año in añosDisponibles.OrderByDescending(a => a))
+                @foreach (var ano in anosDisponibles.OrderByDescending(a => a))
                 {
-                    <option value="@año">@año</option>
+                    <option value="@ano">@ano</option>
                 }
             </select>
             <button class="btn" @onclick="GenerarReporte">Generar Reporte</button>
@@ -133,7 +133,7 @@
         @if (!reportePorMes.Any())
         {
             <div class="empty">
-                No hay facturas para el año @añoSeleccionado
+                No hay facturas para el ano @anoSeleccionado
             </div>
         }
         else
@@ -142,7 +142,7 @@
             {
                 <div class="mes-section">
                     <div class="mes-header">
-                        @mes.NombreMes @añoSeleccionado
+                        @mes.NombreMes @anoSeleccionado
                         <span class="mes-total">Total: $@mes.TotalMes.ToString("N2")</span>
                         <div style="clear: both;"></div>
                     </div>
@@ -178,7 +178,7 @@
             }
 
             <div class="total-anual">
-                <h3>Total Año @añoSeleccionado</h3>
+                <h3>Total Ano @anoSeleccionado</h3>
                 <div class="monto">$@totalAnual.ToString("N2")</div>
                 <div style="margin-top: 10px;">@reportePorMes.Sum(m => m.Facturas.Count) facturas</div>
             </div>
@@ -187,24 +187,26 @@
 </div>
 
 @code {
-    private string añoSeleccionado = string.Empty;
-    private List<int> añosDisponibles = new List<int>();
+    private string anoSeleccionado = string.Empty;
+    private List<int> anosDisponibles = new List<int>();
     private List<ReporteMensual> reportePorMes = new List<ReporteMensual>();
     private decimal totalAnual = 0;
     private bool reporteGenerado = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarAñosDisponibles();
+        await CargarAnosDisponibles();
     }
 
-    private async Task CargarAñosDisponibles()
+    private async Task CargarAnosDisponibles()
     {
-        var facturas = await DbContext.Documentos.ToListAsync();
+        var facturas = await DbContext.Documentos
+            .Where(d => !d.Archivada)
+            .ToListAsync();
 
         if (facturas.Any())
         {
-            añosDisponibles = facturas
+            anosDisponibles = facturas
                 .Select(f => f.FechaEmision.Year)
                 .Distinct()
                 .OrderByDescending(a => a)
@@ -212,26 +214,26 @@
         }
         else
         {
-            añosDisponibles.Add(DateTime.Now.Year);
+            anosDisponibles.Add(DateTime.Now.Year);
         }
     }
 
     private async Task GenerarReporte()
     {
-        if (string.IsNullOrEmpty(añoSeleccionado))
+        if (string.IsNullOrEmpty(anoSeleccionado))
         {
             return;
         }
 
-        int año = int.Parse(añoSeleccionado);
+        int ano = int.Parse(anoSeleccionado);
 
-        var facturasDelAño = await DbContext.Documentos
+        var facturasDelAno = await DbContext.Documentos
             .Include(d => d.LineasDetalle)
-            .Where(d => d.FechaEmision.Year == año)
+            .Where(d => d.FechaEmision.Year == ano && !d.Archivada)
             .OrderBy(d => d.FechaEmision)
             .ToListAsync();
 
-        reportePorMes = facturasDelAño
+        reportePorMes = facturasDelAno
             .GroupBy(f => f.FechaEmision.Month)
             .Select(g => new ReporteMensual
             {
