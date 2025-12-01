@@ -15,8 +15,16 @@ namespace SistemaFacturas.Services
 
         public async Task<ProductoTopDto?> GetProductoMasVendidoAsync()
         {
-            var resultado = await _context.Lineas
-                .Where(l => _context.Documentos.Any(d => d.NumeroDocumento == l.DocumentoId && !d.Archivada))
+            var documentosNoArchivados = await _context.Documentos
+                .Where(d => !d.Archivada)
+                .Select(d => d.NumeroDocumento)
+                .ToListAsync();
+
+            var lineas = await _context.Lineas
+                .Where(l => documentosNoArchivados.Contains(l.DocumentoId))
+                .ToListAsync();
+
+            var resultado = lineas
                 .GroupBy(l => l.NombreProducto)
                 .Select(g => new ProductoTopDto
                 {
@@ -25,15 +33,19 @@ namespace SistemaFacturas.Services
                     TotalRevenue = g.Sum(l => l.ImporteLinea)
                 })
                 .OrderByDescending(p => p.TotalCantidad)
-                .FirstOrDefaultAsync();
+                .FirstOrDefault();
 
             return resultado;
         }
 
         public async Task<MesVentasDto?> GetMesConMasVentasAsync()
         {
-            var resultado = await _context.Documentos
+            var documentos = await _context.Documentos
+                .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
+                .ToListAsync();
+
+            var resultado = documentos
                 .GroupBy(d => new { d.FechaEmision.Year, d.FechaEmision.Month })
                 .Select(g => new MesVentasDto
                 {
@@ -43,15 +55,19 @@ namespace SistemaFacturas.Services
                     DocumentCount = g.Count()
                 })
                 .OrderByDescending(m => m.TotalRevenue)
-                .FirstOrDefaultAsync();
+                .FirstOrDefault();
 
             return resultado;
         }
 
         public async Task<List<MesVentasDto>> GetTendenciaMensualAsync()
         {
-            var resultado = await _context.Documentos
+            var documentos = await _context.Documentos
+                .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
+                .ToListAsync();
+
+            var resultado = documentos
                 .GroupBy(d => new { d.FechaEmision.Year, d.FechaEmision.Month })
                 .Select(g => new MesVentasDto
                 {
@@ -62,15 +78,19 @@ namespace SistemaFacturas.Services
                 })
                 .OrderBy(m => m.Anno)
                 .ThenBy(m => m.Mes)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
 
         public async Task<List<ClienteTopDto>> GetClientesTopAsync()
         {
-            var resultado = await _context.Documentos
+            var documentos = await _context.Documentos
+                .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
+                .ToListAsync();
+
+            var resultado = documentos
                 .GroupBy(d => d.NombreReceptor)
                 .Select(g => new ClienteTopDto
                 {
@@ -80,16 +100,19 @@ namespace SistemaFacturas.Services
                 })
                 .OrderByDescending(c => c.TotalRevenue)
                 .Take(10)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
 
         public async Task<List<ResumenDocumentoDto>> GetResumenDocumentosAsync()
         {
-            var resultado = await _context.Documentos
+            var documentos = await _context.Documentos
                 .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
+                .ToListAsync();
+
+            var resultado = documentos
                 .Select(d => new ResumenDocumentoDto
                 {
                     NumeroDocumento = d.NumeroDocumento,
@@ -99,15 +122,23 @@ namespace SistemaFacturas.Services
                 })
                 .OrderByDescending(r => r.FechaEmision)
                 .Take(20)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
 
         public async Task<List<ProductoTopDto>> GetTopProductoPorMesAsync()
         {
-            var resultado = await _context.Lineas
-                .Where(l => _context.Documentos.Any(d => d.NumeroDocumento == l.DocumentoId && !d.Archivada))
+            var documentosNoArchivados = await _context.Documentos
+                .Where(d => !d.Archivada)
+                .Select(d => d.NumeroDocumento)
+                .ToListAsync();
+
+            var lineas = await _context.Lineas
+                .Where(l => documentosNoArchivados.Contains(l.DocumentoId))
+                .ToListAsync();
+
+            var resultado = lineas
                 .GroupBy(l => l.NombreProducto)
                 .Select(g => new ProductoTopDto
                 {
@@ -117,7 +148,7 @@ namespace SistemaFacturas.Services
                 })
                 .OrderByDescending(p => p.TotalRevenue)
                 .Take(5)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
@@ -125,6 +156,7 @@ namespace SistemaFacturas.Services
         public async Task<List<VentasDiaSemanaDto>> GetVentasPorDiaSemanaAsync()
         {
             var documentos = await _context.Documentos
+                .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
                 .ToListAsync();
 
@@ -160,8 +192,16 @@ namespace SistemaFacturas.Services
 
         public async Task<List<ProductoDecliveDto>> GetProductosEnDecliveAsync()
         {
-            var resultado = await _context.Lineas
-                .Where(l => _context.Documentos.Any(d => d.NumeroDocumento == l.DocumentoId && !d.Archivada))
+            var documentosNoArchivados = await _context.Documentos
+                .Where(d => !d.Archivada)
+                .Select(d => d.NumeroDocumento)
+                .ToListAsync();
+
+            var lineas = await _context.Lineas
+                .Where(l => documentosNoArchivados.Contains(l.DocumentoId))
+                .ToListAsync();
+
+            var resultado = lineas
                 .GroupBy(l => l.NombreProducto)
                 .Select(g => new ProductoDecliveDto
                 {
@@ -170,15 +210,19 @@ namespace SistemaFacturas.Services
                 })
                 .OrderBy(p => p.TotalCantidad)
                 .Take(5)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
 
         public async Task<List<ClienteRecurrenteDto>> GetClientesRecurrentesAsync()
         {
-            var resultado = await _context.Documentos
+            var documentos = await _context.Documentos
+                .Include(d => d.LineasDetalle)
                 .Where(d => !d.Archivada)
+                .ToListAsync();
+
+            var resultado = documentos
                 .GroupBy(d => d.NombreReceptor)
                 .Select(g => new ClienteRecurrenteDto
                 {
@@ -188,7 +232,7 @@ namespace SistemaFacturas.Services
                 })
                 .OrderByDescending(c => c.DocumentCount)
                 .Take(10)
-                .ToListAsync();
+                .ToList();
 
             return resultado;
         }
