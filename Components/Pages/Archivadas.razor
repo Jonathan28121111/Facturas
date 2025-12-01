@@ -1,0 +1,394 @@
+﻿@page "/archivadas"
+@using SistemaFacturas.Services
+@using SistemaFacturas.Modelos
+@inject GestionArchivadas GestionArchivadas
+@rendermode InteractiveServer
+
+<PageTitle>Facturas Archivadas</PageTitle>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 20px;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 380px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .login-header {
+        background: #374151;
+        padding: 30px;
+        text-align: center;
+    }
+
+        .login-header .icon {
+            width: 60px;
+            height: 60px;
+            background: #4b5563;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8rem;
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .login-header p {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin: 8px 0 0 0;
+        }
+
+    .login-body {
+        padding: 30px;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+    }
+
+        .input-group label {
+            display: block;
+            color: #374151;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+            .input-wrapper input:focus {
+                outline: none;
+                border-color: #6b7280;
+                box-shadow: 0 0 0 3px rgba(107,114,128,0.1);
+            }
+
+        .input-wrapper .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        background: #374151;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .btn-login:hover {
+            background: #4b5563;
+        }
+
+    .error-msg {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        border: 1px solid #fecaca;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            color: #374151;
+            font-weight: 600;
+            margin: 0;
+        }
+
+    .badge-count {
+        display: inline-block;
+        background: #f59e0b;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .btn-logout {
+        padding: 10px 20px;
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-logout:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+    .document-item {
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background: white;
+        transition: box-shadow 0.2s;
+    }
+
+        .document-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .document-item h3 {
+            font-size: 1.1rem;
+            color: #374151;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+    .badge-archived {
+        display: inline-block;
+        background: #f59e0b;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+
+    .document-item p {
+        margin: 6px 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+        .document-item p strong {
+            color: #374151;
+        }
+
+    .product-list {
+        margin-top: 12px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+    }
+
+        .product-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+        }
+
+        .product-list li {
+            padding: 4px 0;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+    .btn-desarchivar {
+        margin-top: 12px;
+        padding: 8px 16px;
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-desarchivar:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+    .empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+</style>
+
+@if (!autenticado)
+{
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="icon">🔒</div>
+                <h2>Acceso Restringido</h2>
+                <p>Facturas Archivadas</p>
+            </div>
+            <div class="login-body">
+                @if (errorAuth)
+                {
+                    <div class="error-msg">Contrasena incorrecta. Intente de nuevo.</div>
+                }
+                <div class="input-group">
+                    <label>Contrasena</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔑</span>
+                        <input type="password" @bind="contrasenaIngresada" @onkeypress="OnKeyPress" placeholder="Ingrese su contrasena" />
+                    </div>
+                </div>
+                <button class="btn-login" @onclick="ValidarAcceso">Acceder</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="page-header">
+            <h1>Facturas Archivadas <span class="badge-count">@facturasArchivadas.Count</span></h1>
+            <button class="btn-logout" @onclick="CerrarSesion">Cerrar Sesion</button>
+        </div>
+
+        @if (!facturasArchivadas.Any())
+        {
+            <div class="empty">
+                <div class="empty-icon">📁</div>
+                <p>No hay facturas archivadas</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var doc in facturasArchivadas)
+            {
+                <div class="document-item">
+                    <h3>
+                        Documento #@doc.NumeroDocumento
+                        <span class="badge-archived">ARCHIVADA</span>
+                    </h3>
+                    <p><strong>Fecha:</strong> @doc.FechaEmision.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Receptor:</strong> @doc.NombreReceptor</p>
+                    <p><strong>Total:</strong> $@doc.ImporteTotal.ToString("N2")</p>
+
+                    <div class="product-list">
+                        <strong>Productos:</strong>
+                        <ul>
+                            @foreach (var linea in doc.LineasDetalle)
+                            {
+                                <li>@linea.NombreProducto - @linea.CantidadProducto x $@linea.PrecioUnitario.ToString("N2")</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <button class="btn-desarchivar" @onclick="() => Desarchivar(doc.NumeroDocumento)">Desarchivar</button>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    private string contrasenaIngresada = string.Empty;
+    private bool autenticado = false;
+    private bool errorAuth = false;
+    private List<DocumentoVenta> facturasArchivadas = new List<DocumentoVenta>();
+    private const string CONTRASENA = "jona1234";
+
+    private async Task ValidarAcceso()
+    {
+        if (contrasenaIngresada == CONTRASENA)
+        {
+            autenticado = true;
+            errorAuth = false;
+            await CargarFacturasArchivadas();
+        }
+        else
+        {
+            errorAuth = true;
+        }
+    }
+
+    private async Task CargarFacturasArchivadas()
+    {
+        facturasArchivadas = await GestionArchivadas.ObtenerArchivadas();
+    }
+
+    private async Task Desarchivar(int numeroDocumento)
+    {
+        await GestionArchivadas.DesarchivarDocumento(numeroDocumento);
+        await CargarFacturasArchivadas();
+    }
+
+    private void CerrarSesion()
+    {
+        autenticado = false;
+        contrasenaIngresada = string.Empty;
+        errorAuth = false;
+        facturasArchivadas.Clear();
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await ValidarAcceso();
+        }
+    }
+}
