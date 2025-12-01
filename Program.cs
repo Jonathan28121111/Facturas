@@ -9,27 +9,17 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDbContext<FacturasDbContext>(options =>
-    options.UseSqlite("Data Source=facturas.db")
-           .EnableSensitiveDataLogging()  // Para ver más detalles del error
-           .LogTo(Console.WriteLine));     // Para logging
+    options.UseSqlite("Data Source=facturas.db"));
 
 builder.Services.AddScoped<ConsultasSistema>();
+builder.Services.AddScoped<GestionArchivadas>();
 
 var app = builder.Build();
 
-// Mover esto DESPUÉS de crear el app
-try
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<FacturasDbContext>();
-        // Usar Migrate en lugar de EnsureCreated
-        db.Database.Migrate();
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error al inicializar DB: {ex.Message}");
+    var db = scope.ServiceProvider.GetRequiredService<FacturasDbContext>();
+    db.Database.EnsureCreated();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -41,6 +31,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
